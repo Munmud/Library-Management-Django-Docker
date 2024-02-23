@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Book Review Form</h2>
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Rating Field -->
+            <div class="form-group">
+                <label for="rating">Rating:</label>
+                <select class="form-control" id="rating" name="rating">
+                    {% for choice in rating_choices %}
+                        <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Review Field -->
+            <div class="form-group">
+                <label for="review">Review:</label>
+                <textarea class="form-control" id="review" name="review" rows="5"></textarea>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+{% endblock %}

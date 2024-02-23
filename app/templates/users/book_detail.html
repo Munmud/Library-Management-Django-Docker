@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    {% comment %} <h1>{{ book.name }} Details</h1> {% endcomment %}
+    <div class="card">
+        <img src="{{ book.cover_image.url }}" class="card-img " alt="{{ book.name }}" style="width: 100px; height: auto;">
+        <div class="card-body">
+            <h5 class="card-title">{{ book.name }}</h5>
+            <p class="card-text">Author: {{ book.author }}</p>
+            <p class="card-text">ISBN: {{ book.isbn }}</p>
+            <p class="card-text">Category: {{ book.category }}</p>
+            <p class="card-text">Price: ${{ book.price }}</p>
+            <p class="card-text">Format: {{ book.format }}</p>
+            <p class="card-text">Ratings: {{ rating }}</p>
+            {% comment %} <p class="card-text">Availability: {% if book.availability %} Available {% else %} Not Available {% endif %}</p> {% endcomment %}
+            <p class="card-text">Available Copies: {{ book.available_copy }}</p>
+
+            {% if book.availability %}
+                <form method="post" action="{% url 'reserve_book' book.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Reserve</button>
+                </form>
+            {% endif %}
+
+            <a class="btn btn-primary" href="{% url 'give_rating' book.id  %}">Give Rating</a>
+
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+{% endblock %}

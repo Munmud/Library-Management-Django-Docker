@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Bill Table</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col" >Book</th>
+                <th scope="col" >Amount</th>
+                <th scope="col" >Reason</th>
+                <th scope="col" >Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in bills %}
+            <tr scope="row">
+                <td>{{ bill.reservation.book }}</td>
+                <td>{{ bill.amount }}</td>
+                <td>{{ bill.get_reason_display }}</td>
+                {% comment %} <td>{{ bill.isActive }}</td> {% endcomment %}
+                <td>
+                    {% if bill.isActive %}
+                    <form method="post" action="{% url 'pay_bill' bill.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Pay</button>
+                    </form>
+                    {%else%}
+                    Paid
+                    {% endif %}
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

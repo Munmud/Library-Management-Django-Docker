@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Book</th>
+            <th scope="col">Requested Date</th>
+            <th scope="col">Approved Date</th>
+            <th scope="col">Return Date</th>
+            <th scope="col">Status</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reservation in reservations %}
+        <tr scope="row">
+            <td>{{ reservation.book.name }}</td>
+            <td>{{ reservation.requested_at }}</td>
+            <td>{{ reservation.reserved_at }}</td>
+            <td>{{ reservation.expected_return_date }}</td>
+            <td>{{ reservation.status }}</td>
+
+            <td>
+                {% if reservation.status == 'PENDING' %}
+                    <form method="post" action="{% url 'cancel_reservation' reservation.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Cancel</button>
+                    </form>
+
+                {% elif reservation.status == 'APPROVED' %}
+
+                    <form method="post" action="{% url 'lost_book' reservation.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Lost</button>
+                    </form>
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
