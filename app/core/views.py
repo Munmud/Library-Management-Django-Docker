@@ -6,15 +6,52 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Avg
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from library.forms import RatingForm
-from library.models import Book, Reservation, Bill, Rating, RATING_CHOICE
+from library.models import Book, Reservation, Bill, Rating, RATING_CHOICE, Category
+
+def get_navbar_context(context):
+    context['cats'] = Category.objects.all()
+    return context
+
 
 # @login_required()f
 def dashboard(request):
+
+    books = Book.objects.all()
+
+    
+    category_name = request.GET.get('category')
+    search_query = request.GET.get('search')
+    if category_name:
+        try:
+            category = Category.objects.get(name=category_name)
+            books = Book.objects.filter(category=category)
+        except Category.DoesNotExist:
+            books = []
+    elif search_query:
+        books = books.filter(Q(author__icontains=search_query) | 
+                     Q(name__icontains=search_query))
+
+
+    paginator = Paginator(books, 9)  # Show 9 books per page
+
+    page = request.GET.get('page')
+    try:
+        books = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        books = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        books = paginator.page(paginator.num_pages)
+
     context = {
-        'books': Book.objects.all()
+        'books': books,
     }
+    context = get_navbar_context(context)
     return render(request, 'dashboard.html', context)
 
 @login_required()
@@ -29,7 +66,7 @@ def book_details(request, book_id):
     }
     if (len(reservation) == 1) :
         context['reservation'] = reservation[0]
-    
+    context = get_navbar_context(context)
     return render(request, 'users/book_detail.html', context)
 
 @login_required()

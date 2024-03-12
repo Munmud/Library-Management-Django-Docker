@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
+from django.contrib import messages
 
 def register(request):
     if request.method == 'POST':
@@ -20,6 +21,7 @@ def user_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f"Login Successful")
             return redirect('dashboard')  # Redirect to dashboard or any other page after login
     elif request.user.is_authenticated:
         return redirect('dashboard')
