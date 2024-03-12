@@ -8,12 +8,13 @@ from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
 
+
 class Category(BaseModel):
     name = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
-    
+
     def getName(self):
         return self.name
 
@@ -23,16 +24,19 @@ class Category(BaseModel):
     class Meta:
         ordering = ['name']
 
+
 class Book(BaseModel):
     name = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     isbn = models.CharField(max_length=13, null=True, blank=True)
     # category = models.ManyToOneRel(Category)
-    category = models.ForeignKey(Category, on_delete = models.CASCADE, related_name="books")
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="books")
     price = models.DecimalField(max_digits=10, decimal_places=2)
     format = models.CharField(max_length=50, null=True)
     ratings = models.FloatField(null=True, blank=True)
-    cover_image = models.ImageField(upload_to='book_covers/', null=True, blank=True)
+    cover_image = models.ImageField(
+        upload_to='book_covers/', null=True, blank=True)
     availability = models.BooleanField(default=True)
     available_copy = models.PositiveIntegerField(default=1)
 
@@ -48,12 +52,14 @@ class Book(BaseModel):
     class Meta:
         ordering = ['name']
 
+
 ACTION_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('APPROVED', 'Approved'),
-        ('CANCELLED', 'Cancelled'),
-        ('RETURNED', 'Returned'),
-    ]
+    ('PENDING', 'Pending'),
+    ('APPROVED', 'Approved'),
+    ('CANCELLED', 'Cancelled'),
+    ('RETURNED', 'Returned'),
+]
+
 
 class Reservation(BaseModel):
     book = models.ForeignKey(Book, on_delete=models.DO_NOTHING)
@@ -61,22 +67,27 @@ class Reservation(BaseModel):
     requested_at = models.DateTimeField(auto_now_add=True)
     reserved_at = models.DateTimeField(null=True, blank=True)
     expected_return_date = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=ACTION_CHOICES, default='PENDING')
+    status = models.CharField(
+        max_length=20, choices=ACTION_CHOICES, default='PENDING')
     isActive = models.BooleanField(default=True)
     # def __str__(self):
     #     return f"{self.user} requested {self.book}"
 
+
 BILL_CHOICE = [
-        ('DELAYED', 'Delayed'),
-        ('LOST', 'Lost'),
-    ]
+    ('DELAYED', 'Delayed'),
+    ('LOST', 'Lost'),
+]
+
 
 class Bill(BaseModel):
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     isActive = models.BooleanField(default=True)
-    reason = models.CharField(max_length=20, choices=BILL_CHOICE, default='DELAYED')
+    reason = models.CharField(
+        max_length=20, choices=BILL_CHOICE, default='DELAYED')
+
 
 RATING_CHOICE = [
     (1, 1),
@@ -86,14 +97,17 @@ RATING_CHOICE = [
     (5, 5),
 ]
 
+
 class Rating(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    rating = models.IntegerField(default=0,choices=RATING_CHOICE, help_text="Enter rating from 1 to 5")
+    rating = models.IntegerField(
+        default=0, choices=RATING_CHOICE, help_text="Enter rating from 1 to 5")
     review = models.TextField(blank=True)
 
     class Meta:
         unique_together = ('user', 'book')
+
 
 @receiver(pre_save, sender=Reservation)
 def reservation_status_change(sender, instance, **kwargs):
@@ -101,41 +115,44 @@ def reservation_status_change(sender, instance, **kwargs):
         old_status = Reservation.objects.get(pk=instance.pk).status
         new_status = instance.status
         if old_status != new_status:
-            if (old_status == "PENDING" and new_status=="APPROVED" ):
+            if (old_status == "PENDING" and new_status == "APPROVED"):
                 instance.reserved_at = timezone.now()
-                instance.expected_return_date = instance.reserved_at + timedelta(days=7)
-            elif (old_status == "APPROVED" and new_status=="RETURNED" ):
+                instance.expected_return_date = instance.reserved_at + \
+                    timedelta(days=7)
+            elif (old_status == "APPROVED" and new_status == "RETURNED"):
                 instance.isActive = False
                 book = instance.book
-                book.available_copy +=1
+                book.available_copy += 1
                 book.availability = True
                 book.save()
                 # instance.expected_return_date = instance.reserved_at + timedelta(days=7)
-                late_days = (timezone.now().date() - instance.expected_return_date).days
+                late_days = (timezone.now().date() -
+                             instance.expected_return_date).days
 
-                if late_days >0 :
+                if late_days > 0:
                     Bill.objects.create(
-                        reservation=instance, 
-                        user= instance.user, 
-                        amount = settings.DELAY_FINE_PER_DAY * late_days,
+                        reservation=instance,
+                        user=instance.user,
+                        amount=settings.DELAY_FINE_PER_DAY * late_days,
                     )
-            elif (old_status == "PENDING" and new_status=="CANCELLED" ):
+            elif (old_status == "PENDING" and new_status == "CANCELLED"):
                 instance.isActive = False
                 book = instance.book
-                book.available_copy +=1
+                book.available_copy += 1
                 book.availability = True
                 book.save()
-            elif (old_status == "APPROVED" and new_status=="CANCELLED" ):
+            elif (old_status == "APPROVED" and new_status == "CANCELLED"):
                 bookprice = instance.book.price
                 print(bookprice)
                 Bill.objects.create(
-                        reservation=instance, 
-                        user= instance.user, 
-                        amount = settings.BOOK_LOST_EXTRA_FINE + bookprice,
-                        reason='LOST'
-                    )
-            else :
-                raise ValidationError(f"Reservation status cannot be changed to {new_status} from {old_status}")
+                    reservation=instance,
+                    user=instance.user,
+                    amount=settings.BOOK_LOST_EXTRA_FINE + bookprice,
+                    reason='LOST'
+                )
+            else:
+                raise ValidationError(
+                    f"Reservation status cannot be changed to {new_status} from {old_status}")
     # else:
     #     instance.status = "PENDING"
     #     user = instance.user
@@ -155,4 +172,18 @@ def reservation_status_change(sender, instance, **kwargs):
     #     book.save()
 
 
+class Notebook(BaseModel):
+    title = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.title
+
+
+class Note(BaseModel):
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    notebook = models.ForeignKey(Notebook, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title

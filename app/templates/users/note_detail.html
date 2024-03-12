@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% for note in notes %}
+    <h4>{{ note.title }}</h4>
+    <p>{{ note.content }}</p>
+  {% endfor %}
+  <a href="{% url 'notebook_list' %}">Back to Notebooks</a>
+{% endblock %}

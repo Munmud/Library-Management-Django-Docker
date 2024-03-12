@@ -20,25 +20,31 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from authentication.views import register, user_login, user_logout
 # from event.views import EventList, EventDetail, RegistrationList, RegistrationDetail
-from .views import dashboard, book_details, reserve_book, myrequests, cancel_reservation, lost_book, my_bill, pay_bill, give_rating
+from .views import dashboard, book_details, reserve_book, myrequests, cancel_reservation, lost_book, my_bill, pay_bill, give_rating, notebook_list, note_detail, add_notebook, add_note
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', user_login, name='login'),
     path('logout/', user_logout, name='logout'),
     path('register/', register, name='register'),
-    
+
     path('books/<int:book_id>', book_details, name='book_detail'),
     path('books/<int:book_id>/reservation', reserve_book, name='reserve_book'),
     path('books/<int:book_id>/rating', give_rating, name='give_rating'),
-   
+
     path('myrequests/', myrequests, name='myrequests'),
-    path('myrequests/<int:reservation_id>/cancel', cancel_reservation, name='cancel_reservation'),
+    path('myrequests/<int:reservation_id>/cancel',
+         cancel_reservation, name='cancel_reservation'),
     path('myrequests/<int:reservation_id>/lost', lost_book, name='lost_book'),
-    
+
     path('mybills/', my_bill, name='my_bill'),
     path('mybills/<int:bill_id>/pay', pay_bill, name='pay_bill'),
-    
+
+    path('notebooks/', notebook_list, name='notebook_list'),
+    path('notebooks/add', add_notebook, name='add_notebook'),
+    path('notebooks/<int:notebook_id>/', note_detail, name='note_detail'),
+    path('notebooks/<int:notebook_id>/add', add_note, name='add_note'),
+
     path('', dashboard, name='dashboard'),
 
 
